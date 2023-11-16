@@ -8,8 +8,8 @@ class Figur:
         self.bilde = pygame.transform.scale(self.originalt_bilde, (self.original_storrelse[0] * storrelse, self.original_storrelse[1] * storrelse))
         self.ramme = self.bilde.get_rect()
 
-    def tegn(self, vindu, x, y):
-        vindu.blit(self.bilde, (x, y))
+    def tegn(self, vindu):
+        vindu.blit(self.bilde, self.ramme)
 
 
 
@@ -17,13 +17,17 @@ class Bakgrunn(Figur):
     def __init__(self, bildeurl: str, storrelse: float):
         super().__init__(bildeurl, storrelse)
 
-    def tegn(self, vindu, x, y):
-        super().tegn(vindu, x, y)
+    # Tegner alltid to bakgrunner etter hverandre
+    def tegn(self, vindu):
+        vindu.blit(self.bilde, self.ramme)
+        vindu.blit(self.bilde, (self.ramme.x + self.ramme.width, 0))
 
+    def flytt_bakgrunn(self, scroll_fart: int | float):
+        bakgrunn.ramme.x += scroll_fart # Oppdaterer posisjonen til bagrunnen, flytter den til venstre
 
-    def flytt_bakgrunn():
-        for i in range(2):
-            bakgrunn.tegn(vindu, i * bakgrunn.ramme.width + scroll, 0) # Tegner den første bg i (0,0) og den andre bg ved siden av den første. De flytter seg med scroll
+        # Når posisjonen til bakgrunnsrammen er større enn abs. til bakgrunnsbredden, reseter jeg posisjonen tilbake, og den scroller evig
+        if abs(bakgrunn.ramme.x) > self.ramme.width:
+            self.ramme.x = 0
 
 
 
@@ -32,8 +36,8 @@ class Bil(Figur):
         super().__init__(bildeurl, storrelse)
         self.fart = 0
 
-    def tegn(self, vindu, x, y):
-        super().tegn(vindu, x, y)
+    # def tegn(self, vindu, x, y):
+    #     super().tegn(vindu, x, y)
 
     def flytt_bil():
         pass
@@ -56,14 +60,11 @@ font = pygame.font.SysFont("Open Sans", 24) # Skrifttype
 
 
 
-bakgrunn = Bakgrunn("bilder/bakgrunn.jpg", 1.5) 
+bakgrunn = Bakgrunn("bilder/bakgrunn.jpg", 1.5)
 
 spillerbil = Bil("bilder/spillerbil.png", 1.1)
 pcbil = Bil("bilder/pcbil.png", 0.35)
 
-
-
-scroll = 0
 
 
 while True:
@@ -78,16 +79,24 @@ while True:
     vindu.fill("gray") # Fyller vinduet med hvit bakgrunn, for hver gang loopen kjører.
 
     
-    Bakgrunn.flytt_bakgrunn()
-    scroll -= 4.321
+    
+    bakgrunn.tegn(vindu)
+    bakgrunn.flytt_bakgrunn(-10)
+    
+    
 
-    if abs(scroll) > bakgrunn.ramme.width: # absoluttverdien av scoll, siden den blir mer og mer negativ. Gir mer mening sånn
-        scroll = 0
 
 
 
-    pcbil.tegn(vindu, 100, 230)
-    spillerbil.tegn(vindu, 100, 345)
+
+    spillerbil.ramme.x = 100
+    spillerbil.ramme.y = 345
+
+    pcbil.ramme.x = 100
+    pcbil.ramme.y = 230
+
+    pcbil.tegn(vindu)
+    spillerbil.tegn(vindu)
 
 
 
