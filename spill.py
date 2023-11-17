@@ -38,6 +38,7 @@ class Bil(Spillobjekt):
         super().__init__(bildeurl, storrelse)
         self.fart = 1 # Startfarten for begge bilene
         self.spiller_fartsokning = 0.05
+        self.pc_fartsokning = 0.005
 
     def flytt_bil(self):
         self.ramme.x += self.fart
@@ -193,6 +194,7 @@ while True:
         pcbil.flytt_bil()
         spillerbil.flytt_bil()
 
+    pcbil.fart += pcbil.pc_fartsokning
 
     # 4. Tegn
     vindu.fill((150, 150, 150))
