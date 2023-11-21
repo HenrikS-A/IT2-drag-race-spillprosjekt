@@ -33,13 +33,15 @@ class Bakgrunn(Spillobjekt):
         self.scroll_fart = 0.1
 
 class Bil(Spillobjekt):
-    def __init__(self, bildeurl: str, storrelse: float, y_verdi: int):
+    def __init__(self, bildeurl: str, storrelse: float, y_verdi: int, fartsokning: float):
         super().__init__(bildeurl, storrelse)
         self.fart = 1 # Startfarten for begge bilene
-        self.spiller_fartsokning = 0.05
-        self.pc_fartsokning = 0.005
+        self.fartsokning = fartsokning
         self.startfartsvisning = 0
         self.ramme.y = y_verdi
+    
+    def oke_fart(self):
+        self.fart += self.fartsokning
 
     def flytt_bil(self):
         self.ramme.x += self.fart
@@ -127,8 +129,8 @@ font_vinner = pygame.font.SysFont("Open Sans", 30)
 
 # Lager klasse-instanser
 bakgrunn = Bakgrunn("bilder/bakgrunn.jpg", 1.5)
-pcbil = Bil("bilder/pcbil.png", 0.35, 230)
-spillerbil = Bil("bilder/spillerbil.png", 1.1, 340)
+pcbil = Bil("bilder/pcbil.png", 0.35, 230, 0.005)
+spillerbil = Bil("bilder/spillerbil.png", 1.1, 340, 0.05)
 restart_knapp = Knapp("RESTART", 300)
 lukk_knapp = Knapp("LUKK SPILL", 400)
 
@@ -137,6 +139,9 @@ game_over = False
 
 
 while True:
+    
+
+
     # 2. Håndter input
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -144,63 +149,84 @@ while True:
         
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                spillerbil.fart += spillerbil.spiller_fartsokning
+                spillerbil.oke_fart()
+    
 
-        if game_over:
+
+
+    # Sjekker om spillet er over
+    if game_over:
+
+
+        for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONUP:
                 if restart_knapp.knapp_trykk():
                     game_over = reset_spill()
                 if lukk_knapp.knapp_trykk():
                     lukk_spill()
-            #game_over = restart_knapp.knapp_trykk(reset_spill)
+
+
+
+
+
+
+        ## 1. Tegner bakgrunnen
+        bakgrunn.tegn(vindu)
+        pcbil.tegn(vindu)
+        spillerbil.tegn(vindu)
+
+        ## 2. Viser game over skjermen
+        game_over_skjerm() 
+
+        ## 3. Håndter input på game over skjermen
         
 
-    ### IF GAME OVER LOOPEN HER, hvis continue kjører så vil ikke noe av det under kjøre. Da vil den ikke sjekke unødvendige ting hver gang loopen kjører.
-    
-            
-    # 3. Oppdater spill
-    if not game_over:
-        bakgrunn.flytt_bakgrunn()
-        pcbil.flytt_bil()
-        spillerbil.flytt_bil()
+        ## 4. Oppdaterer skjermen
+        pygame.display.flip()
+        klokke.tick(FPS)
+        continue
+        # Alt under vil bare kjøre hvis game_over = False.
 
-    pcbil.fart += pcbil.pc_fartsokning
+
+
+    # 3. Oppdater spill
+    bakgrunn.flytt_bakgrunn()
+    spillerbil.flytt_bil()
+    pcbil.flytt_bil()
+    pcbil.oke_fart()
 
     # 4. Tegn
     vindu.fill((150, 150, 150))
 
-    # Tegner spillobjektene
     bakgrunn.tegn(vindu)
     pcbil.tegn(vindu)
     spillerbil.tegn(vindu)
 
-    # Tegner tekst, så lenge game_over ikke er True
-    if not game_over:
+    
 
-        # Gjør at farten som blir skrevet ikke starter på 20, men at det er en liten slags animasjon fra 0-20.
-        if spillerbil.fart <= 1 and spillerbil.startfartsvisning < 40:
-            tekst_surface = font.render(f"Fart: {round(spillerbil.startfartsvisning * 0.5, 2)} km/h", True, "black")
-            vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() * 0.5), 600)) 
-            spillerbil.startfartsvisning += 1
 
-        else:
-            tekst_surface = font.render(f"Fart: {round(spillerbil.fart, 2) * 20} km/h", True, "black")
-            vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() * 0.5), 600)) 
+    # OBSOBSOBSOBSOBSOBSOBS FIKS DENNE (kanskje bare funksjon)
 
-    # Game Over:
+    # Gjør at farten som blir skrevet ikke starter på 20, men at det er en liten slags animasjon fra 0-20.
+    if spillerbil.fart <= 1 and spillerbil.startfartsvisning < 40:
+        tekst_surface = font.render(f"Fart: {round(spillerbil.startfartsvisning * 0.5, 2)} km/h", True, "black")
+        vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() * 0.5), 600)) 
+        spillerbil.startfartsvisning += 1
+
+    else:
+        tekst_surface = font.render(f"Fart: {round(spillerbil.fart, 2) * 20} km/h", True, "black")
+        vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() * 0.5), 600)) 
+
+
+
+
+    # Sjekk om game over stemmer:
     if spillerbil.ramme.centerx + 150 > SKJERM_BREDDE or pcbil.ramme.centerx + 145 > SKJERM_BREDDE:
         game_over = True
 
 
 
-    # GJØRE DENNE TYDELIGERE LENGER OPP!!!
-    if game_over:
-        game_over_skjerm()
-        pygame.display.flip()
-        klokke.tick(FPS)
-        continue
-
-
+    
 
     pygame.display.flip()
     klokke.tick(FPS)
