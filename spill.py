@@ -33,23 +33,35 @@ class Bakgrunn(Spillobjekt):
         self.scroll_fart = 0.1
 
 class Bil(Spillobjekt):
-    def __init__(self, bildeurl: str, storrelse: float, y_verdi: int, fartsokning: float):
+    def __init__(self, bildeurl: str, storrelse: float, y_verdi: int):
         super().__init__(bildeurl, storrelse)
         self.fart = 1 # Startfarten for begge bilene
-        self.fartsokning = fartsokning
-        self.startfartsvisning = 0
         self.ramme.y = y_verdi
+        self.startfartsvisning_verdi = 0
     
-    def oke_fart(self):
-        self.fart += self.fartsokning
+    def oke_fart(self, fartsokning):
+        self.fart += fartsokning
 
     def flytt_bil(self):
         self.ramme.x += self.fart
 
+    def hent_frontkoordinat(self, avstand_fra_sentrum_til_front):
+        return self.ramme.centerx + avstand_fra_sentrum_til_front
+
+    def startfartsvisning(self, vindu):
+        # Lager en slags animasjon på starten slik at farten starter på 0 og øker gradvis til 20
+        if self.fart <= 1 and self.startfartsvisning_verdi < 40:
+            tekst_surface = font.render(f"Fart: {round(self.startfartsvisning_verdi * 0.5)} km/h", True, "black")
+            vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() // 2), 600)) 
+            self.startfartsvisning_verdi += 1
+        else:
+            tekst_surface = font.render(f"Fart: {round(self.fart, 2) * 20} km/h", True, "black")
+            vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() // 2), 600)) 
+
     def reset_bil(self):
         self.ramme.x = 0
         self.fart = 1
-        self.startfartsvisning = 0
+        self.startfartsvisning_verdi = 0
 
 
 class Knapp:
@@ -90,11 +102,23 @@ def reset_spill():
     return game_over
 
 def game_over_skjerm():
+    # Overlay surface
     game_over_surface = pygame.Surface((SKJERM_BREDDE, SKJERM_HOYDE))
     game_over_surface.fill((32, 33, 36))
     game_over_surface.set_alpha(200)
+
+    # Tegner bakgrunnen
+    vindu.fill((150, 150, 150))
+    bakgrunn.tegn(vindu)
+    pcbil.tegn(vindu)
+    spillerbil.tegn(vindu)
     vindu.blit(game_over_surface, (0, 0)) # Plassert slik at den dekker hele skjermen
 
+    # Tegner knappene
+    restart_knapp.tegn(vindu)
+    lukk_knapp.tegn(vindu)
+
+    # Tekst:
     tekst_surface_game_over = font_game_over.render("GAME OVER", True, (234, 128, 252))
     vindu.blit(tekst_surface_game_over, ((SKJERM_BREDDE // 2) - (tekst_surface_game_over.get_width() * 0.5), 130))
 
@@ -105,9 +129,6 @@ def game_over_skjerm():
 
     tekst_surface_vinner = font_vinner.render(vinner_tekst, True, (234, 128, 252))
     vindu.blit(tekst_surface_vinner, ((SKJERM_BREDDE // 2) - (tekst_surface_vinner.get_width() // 2), 250))
-
-    restart_knapp.tegn(vindu)
-    lukk_knapp.tegn(vindu)
 
 
 
@@ -129,8 +150,8 @@ font_vinner = pygame.font.SysFont("Open Sans", 30)
 
 # Lager klasse-instanser
 bakgrunn = Bakgrunn("bilder/bakgrunn.jpg", 1.5)
-pcbil = Bil("bilder/pcbil.png", 0.35, 230, 0.005)
-spillerbil = Bil("bilder/spillerbil.png", 1.1, 340, 0.05)
+pcbil = Bil("bilder/pcbil.png", 0.35, 230)
+spillerbil = Bil("bilder/spillerbil.png", 1.1, 340)
 restart_knapp = Knapp("RESTART", 300)
 lukk_knapp = Knapp("LUKK SPILL", 400)
 
@@ -139,61 +160,41 @@ game_over = False
 
 
 while True:
-    
-
-
     # 2. Håndter input
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             lukk_spill()
         
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                spillerbil.oke_fart()
-    
-
-
-
-    # Sjekker om spillet er over
-    if game_over:
-
-
-        for event in pygame.event.get():
+        if game_over:
             if event.type == pygame.MOUSEBUTTONUP:
                 if restart_knapp.knapp_trykk():
                     game_over = reset_spill()
                 if lukk_knapp.knapp_trykk():
                     lukk_spill()
+            continue
+            # Hopper over å sjekke eventene under, går til neste iterasjon på for-loopen
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                spillerbil.oke_fart(0.05)
 
 
-
-
-
-
-        ## 1. Tegner bakgrunnen
-        bakgrunn.tegn(vindu)
-        pcbil.tegn(vindu)
-        spillerbil.tegn(vindu)
-
-        ## 2. Viser game over skjermen
+    # Hvis spillet er over vises game over skjermen
+    if game_over:
         game_over_skjerm() 
 
-        ## 3. Håndter input på game over skjermen
-        
-
-        ## 4. Oppdaterer skjermen
+        # Oppdaterer skjermen
         pygame.display.flip()
         klokke.tick(FPS)
         continue
         # Alt under vil bare kjøre hvis game_over = False.
 
 
-
     # 3. Oppdater spill
     bakgrunn.flytt_bakgrunn()
     spillerbil.flytt_bil()
     pcbil.flytt_bil()
-    pcbil.oke_fart()
+    pcbil.oke_fart(0.005)
 
     # 4. Tegn
     vindu.fill((150, 150, 150))
@@ -202,31 +203,13 @@ while True:
     pcbil.tegn(vindu)
     spillerbil.tegn(vindu)
 
-    
+    spillerbil.startfartsvisning(vindu)
 
 
-    # OBSOBSOBSOBSOBSOBSOBS FIKS DENNE (kanskje bare funksjon)
-
-    # Gjør at farten som blir skrevet ikke starter på 20, men at det er en liten slags animasjon fra 0-20.
-    if spillerbil.fart <= 1 and spillerbil.startfartsvisning < 40:
-        tekst_surface = font.render(f"Fart: {round(spillerbil.startfartsvisning * 0.5, 2)} km/h", True, "black")
-        vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() * 0.5), 600)) 
-        spillerbil.startfartsvisning += 1
-
-    else:
-        tekst_surface = font.render(f"Fart: {round(spillerbil.fart, 2) * 20} km/h", True, "black")
-        vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() * 0.5), 600)) 
-
-
-
-
-    # Sjekk om game over stemmer:
-    if spillerbil.ramme.centerx + 150 > SKJERM_BREDDE or pcbil.ramme.centerx + 145 > SKJERM_BREDDE:
+    # Sjekker om en av bilene har kommet til målstreken:
+    if spillerbil.hent_frontkoordinat(145) > SKJERM_BREDDE or pcbil.hent_frontkoordinat(150) > SKJERM_BREDDE:
         game_over = True
 
-
-
-    
 
     pygame.display.flip()
     klokke.tick(FPS)
