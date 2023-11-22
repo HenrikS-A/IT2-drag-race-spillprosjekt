@@ -68,8 +68,8 @@ class Knapp:
     def __init__(self, tekst: str, y_verdi: int):
         self.knapp_surface = pygame.Surface((300, 80))
         self.knapp_surface_skygge = pygame.Surface((300, 80))
-        self.knapp_surface.fill((150, 150, 150))
-        self.knapp_surface_skygge.fill((60, 64, 66))
+        self.knapp_surface.fill(FARGER["LYS_GRA"])
+        self.knapp_surface_skygge.fill(FARGER["SKYGGE_GRA"])
         self.ramme = self.knapp_surface.get_rect()
         self.ramme.x = (SKJERM_BREDDE // 2) - (self.ramme.width // 2) # Plasserer knappen sentrert
         self.ramme.y = y_verdi
@@ -104,11 +104,11 @@ def reset_spill():
 def game_over_skjerm():
     # Overlay surface
     game_over_surface = pygame.Surface((SKJERM_BREDDE, SKJERM_HOYDE))
-    game_over_surface.fill((32, 33, 36))
+    game_over_surface.fill(FARGER["MORK_GRA"])
     game_over_surface.set_alpha(200)
 
     # Tegner bakgrunnen
-    vindu.fill((150, 150, 150))
+    vindu.fill(FARGER["GRA"])
     bakgrunn.tegn(vindu)
     pcbil.tegn(vindu)
     spillerbil.tegn(vindu)
@@ -119,7 +119,7 @@ def game_over_skjerm():
     lukk_knapp.tegn(vindu)
 
     # Tekst:
-    tekst_surface_game_over = font_game_over.render("GAME OVER", True, (234, 128, 252))
+    tekst_surface_game_over = font_game_over.render("GAME OVER", True, FARGER["LILLA"])
     vindu.blit(tekst_surface_game_over, ((SKJERM_BREDDE // 2) - (tekst_surface_game_over.get_width() * 0.5), 130))
 
     if spillerbil.ramme.centerx > pcbil.ramme.centerx:
@@ -127,7 +127,7 @@ def game_over_skjerm():
     else:
         vinner_tekst = "DU TAPTE"
 
-    tekst_surface_vinner = font_vinner.render(vinner_tekst, True, (234, 128, 252))
+    tekst_surface_vinner = font_vinner.render(vinner_tekst, True, FARGER["LILLA"])
     vindu.blit(tekst_surface_vinner, ((SKJERM_BREDDE // 2) - (tekst_surface_vinner.get_width() // 2), 250))
 
 
@@ -138,6 +138,19 @@ pygame.init()
 SKJERM_BREDDE = 1280
 SKJERM_HOYDE = 720
 FPS = 60
+
+PC_FARTSOKNING = 0.005
+SPILLER_FARTSOKNING = 0.05
+PC_AVSTAND_TIL_FRONT = 145
+SPILLER_AVSTAND_TIL_FRONT = 150
+
+FARGER = {
+    "GRA": (150, 150, 150),
+    "LYS_GRA": (150, 150, 150),
+    "SKYGGE_GRA": (60, 64, 66),
+    "MORK_GRA": (32, 33, 36),
+    "LILLA": (234, 128, 252)
+}
 
 vindu = pygame.display.set_mode((SKJERM_BREDDE, SKJERM_HOYDE))
 klokke = pygame.time.Clock()
@@ -176,7 +189,7 @@ while True:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                spillerbil.oke_fart(0.05)
+                spillerbil.oke_fart(SPILLER_FARTSOKNING)
 
 
     # Hvis spillet er over vises game over skjermen
@@ -194,10 +207,10 @@ while True:
     bakgrunn.flytt_bakgrunn()
     spillerbil.flytt_bil()
     pcbil.flytt_bil()
-    pcbil.oke_fart(0.005)
+    pcbil.oke_fart(PC_FARTSOKNING)
 
     # 4. Tegn
-    vindu.fill((150, 150, 150))
+    vindu.fill(FARGER["GRA"])
 
     bakgrunn.tegn(vindu)
     pcbil.tegn(vindu)
@@ -207,7 +220,7 @@ while True:
 
 
     # Sjekker om en av bilene har kommet til målstreken:
-    if spillerbil.hent_frontkoordinat(145) > SKJERM_BREDDE or pcbil.hent_frontkoordinat(150) > SKJERM_BREDDE:
+    if spillerbil.hent_frontkoordinat(SPILLER_AVSTAND_TIL_FRONT) > SKJERM_BREDDE or pcbil.hent_frontkoordinat(PC_AVSTAND_TIL_FRONT) > SKJERM_BREDDE:
         game_over = True
 
 
