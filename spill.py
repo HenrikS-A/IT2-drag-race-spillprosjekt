@@ -45,8 +45,8 @@ class Bil(Spillobjekt):
     def flytt_bil(self):
         self.ramme.x += self.fart
 
-    def hent_frontkoordinat(self, avstand_fra_sentrum_til_front: int) -> int:
-        return self.ramme.centerx + avstand_fra_sentrum_til_front
+    def hent_frontkoordinat(self, sentrum_til_front: int) -> int:
+        return self.ramme.centerx + sentrum_til_front
 
     def startfartsvisning(self, vindu: pygame.Surface):
         # Lager en slags animasjon på starten slik at farten starter på 0 og øker gradvis til 20
@@ -87,6 +87,7 @@ class Knapp:
         mus_posisjon = pygame.mouse.get_pos()
         if self.ramme.collidepoint(mus_posisjon):  # sjekker om musen er i knapp-rammen når man trykker
             return True
+        return False
 
 
 def lukk_spill():
