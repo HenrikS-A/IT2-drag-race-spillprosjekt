@@ -92,7 +92,6 @@ while True:
             if event.key == pygame.K_SPACE:
                 spillerbil.oke_fart(SPILLER_FARTSOKNING)
 
-
     # Hvis spillet er over starter egen game-loop for game over skjermen
     if game_over:
         game_over_skjerm() 
@@ -119,7 +118,6 @@ while True:
     # Sjekker om en av bilene har kommet til målstreken:
     if spillerbil.hent_frontkoordinat(SPILLER_AVSTAND_TIL_FRONT) > SKJERM_BREDDE or pcbil.hent_frontkoordinat(PC_AVSTAND_TIL_FRONT) > SKJERM_BREDDE:
         game_over = True
-
 
     pygame.display.flip()
     klokke.tick(FPS)
