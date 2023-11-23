@@ -1,93 +1,7 @@
 import pygame
-
-class Spillobjekt:
-    def __init__(self, bildeurl: str, storrelse: float):
-        self.originalt_bilde = pygame.image.load(bildeurl).convert_alpha()
-        self.original_storrelse = self.originalt_bilde.get_size()
-        self.bilde = pygame.transform.scale(self.originalt_bilde, (self.original_storrelse[0] * storrelse, self.original_storrelse[1] * storrelse))
-        self.ramme = self.bilde.get_rect()
-
-    def tegn(self, vindu: pygame.Surface):
-        vindu.blit(self.bilde, self.ramme)
-
-class Bakgrunn(Spillobjekt):
-    def __init__(self, bildeurl, storrelse):
-        super().__init__(bildeurl, storrelse)
-        self.scroll_fart = 0.1
-
-    # Tegner alltid to bakgrunner etter hverandre, overskriver Spillobjekt sin tegn-funksjon
-    def tegn(self, vindu):
-        vindu.blit(self.bilde, self.ramme)
-        vindu.blit(self.bilde, (self.ramme.x + self.ramme.width, 0))
-
-    def flytt_bakgrunn(self):
-        self.ramme.x -= self.scroll_fart # Oppdaterer posisjonen til bagrunnen, flytter den til venstre
-        self.scroll_fart += 0.05 # Øker farten som bakgrunnen flytter seg med
-
-        # Når absoluttverdien av posisjonen til bakgrunnsrammen er større enn bakgrunnsbredden, setter jeg posisjonen tilbake til start. Den scroller for evig
-        if abs(self.ramme.x) > self.ramme.width:
-            self.ramme.x = 0
-
-    def reset_bakgrunn(self):
-        self.ramme.x = 0
-        self.scroll_fart = 0.1
-
-class Bil(Spillobjekt):
-    def __init__(self, bildeurl, storrelse, y_verdi: int):
-        super().__init__(bildeurl, storrelse)
-        self.fart = 1 # Startfarten for begge bilene
-        self.ramme.y = y_verdi
-        self.startfartsvisning_verdi = 0
-    
-    def oke_fart(self, fartsokning: float):
-        self.fart += fartsokning
-
-    def flytt_bil(self):
-        self.ramme.x += self.fart
-
-    def hent_frontkoordinat(self, sentrum_til_front: int) -> int:
-        return self.ramme.centerx + sentrum_til_front
-
-    def startfartsvisning(self, vindu: pygame.Surface):
-        # Lager en slags animasjon på starten slik at farten starter på 0 og øker gradvis til 20
-        if self.fart <= 1 and self.startfartsvisning_verdi < 40:
-            tekst_surface = font.render(f"Fart: {round(self.startfartsvisning_verdi * 0.5)} km/h", True, "black")
-            vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() // 2), 600)) 
-            self.startfartsvisning_verdi += 1
-        else:
-            tekst_surface = font.render(f"Fart: {round(self.fart, 2) * 20} km/h", True, "black")
-            vindu.blit(tekst_surface, ((SKJERM_BREDDE // 2) - (tekst_surface.get_width() // 2), 600)) 
-
-    def reset_bil(self):
-        self.ramme.x = 0
-        self.fart = 1
-        self.startfartsvisning_verdi = 0
-
-
-class Knapp:
-    def __init__(self, tekst: str, y_verdi: int):
-        self.knapp_surface = pygame.Surface((300, 80))
-        self.knapp_surface_skygge = pygame.Surface((300, 80))
-        self.knapp_surface.fill(FARGER["GRA"])
-        self.knapp_surface_skygge.fill(FARGER["SKYGGE_GRA"])
-        self.ramme = self.knapp_surface.get_rect()
-        self.ramme.x = (SKJERM_BREDDE // 2) - (self.ramme.width // 2) # Plasserer knappen sentrert
-        self.ramme.y = y_verdi
-
-        self.tekst_surface = font.render(tekst, True, "black")
-
-    def tegn(self, vindu: pygame.Surface):
-        vindu.blit(self.knapp_surface_skygge, (self.ramme.x + 5, self.ramme.y + 5)) # Forskyver skyggen i forhold til knappen
-        vindu.blit(self.knapp_surface, self.ramme)
-        
-        # Plasserer teksten midt på knappen
-        self.knapp_surface.blit(self.tekst_surface, ((self.knapp_surface.get_width() // 2) - (self.tekst_surface.get_width() // 2), (self.knapp_surface.get_height() // 2) - (self.tekst_surface.get_height() // 2)))
-
-    def knapp_trykk(self):
-        mus_posisjon = pygame.mouse.get_pos()
-        if self.ramme.collidepoint(mus_posisjon):  # sjekker om musen er i knapp-rammen når man trykker
-            return True
-        return False
+from konstanter import *
+from klasser import Bakgrunn, Bil
+from ui import Knapp
 
 
 def lukk_spill():
@@ -137,32 +51,14 @@ def game_over_skjerm():
     klokke.tick(FPS)
 
 
-
 # 1. Oppsett
 pygame.init()
-
-SKJERM_BREDDE = 1280
-SKJERM_HOYDE = 720
-FPS = 60
-
-PC_FARTSOKNING = 0.005
-SPILLER_FARTSOKNING = 0.05
-PC_AVSTAND_TIL_FRONT = 145
-SPILLER_AVSTAND_TIL_FRONT = 150
-
-FARGER: dict[str, tuple] = {
-    "GRA": (150, 150, 150),
-    "SKYGGE_GRA": (60, 64, 66),
-    "MORK_GRA": (32, 33, 36),
-    "LILLA": (234, 128, 252)
-}
 
 vindu = pygame.display.set_mode((SKJERM_BREDDE, SKJERM_HOYDE))
 klokke = pygame.time.Clock()
 pygame.display.set_caption("Drag Race") 
 
 # Ulike fonttyper
-font = pygame.font.SysFont("Open Sans", 28)
 font_game_over = pygame.font.SysFont("Open Sans", 85)
 font_vinner = pygame.font.SysFont("Open Sans", 30)
 
