@@ -86,7 +86,7 @@ while True:
                 if lukk_knapp.knapp_trykk():
                     lukk_spill()
             continue
-            # Hopper over å sjekke eventene under, går til neste iterasjon på for-loopen
+            # Hopper over å sjekke eventene under hvis spillet er over, går til neste iterasjon på for-loopen
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
@@ -111,8 +111,7 @@ while True:
     bakgrunn.tegn(vindu)
     pcbil.tegn(vindu)
     spillerbil.tegn(vindu)
-
-    spillerbil.startfartsvisning(vindu)
+    spillerbil.fartsvisning(vindu)
 
 
     # Sjekker om en av bilene har kommet til målstreken:
